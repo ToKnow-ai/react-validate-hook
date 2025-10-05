@@ -2,6 +2,10 @@
 
 > A lightweight, flexible, and type-safe React form validation hook with zero dependencies (except React).
 
+[![npm version](https://img.shields.io/npm/v/react-validate-hook.svg)](https://www.npmjs.com/package/react-validate-hook) 
+[![npm downloads](https://img.shields.io/npm/dm/react-validate-hook.svg)](https://www.npmjs.com/package/react-validate-hook) 
+[![license](https://img.shields.io/npm/l/react-validate-hook.svg)](https://www.npmjs.com/package/react-validate-hook)
+
 ## Why This Package?
 
 ### 🎯 Design Philosophy

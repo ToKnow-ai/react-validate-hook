@@ -1,0 +1,75 @@
+{
+  "name": "react-validate-hook",
+  "version": "1.0.0",
+  "description": "A lightweight, flexible, and type-safe React form validation hook with zero dependencies (except React)",
+  "keywords": [
+    "react",
+    "validation",
+    "form",
+    "hook",
+    "typescript",
+    "zod",
+    "yup",
+    "schema"
+  ],
+  "author": "Kabui Charles",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ToKnow-ai/react-validate-hook.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ToKnow-ai/react-validate-hook/issues"
+  },
+  "homepage": "https://github.com/ToKnow-ai/react-validate-hook#readme",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build",
+    "build:watch": "vite build --watch",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "prepublishOnly": "yarn clean && yarn build && yarn test",
+    "dev": "yarn build:watch"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^14.2.2",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.17",
+    "@types/react": "^18.2.45",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/parser": "^6.18.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "jest": "^29.7.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.0",
+    "vite-plugin-dts": "^3.6.0"
+  }
+}

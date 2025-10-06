@@ -171,9 +171,10 @@ const ValidateWrapper = <TValue, TFactoryValue, TSchema>({
 
   useEffect(() => {
     if (canValidate) {
-      const result: ValidationResult = "validationFactory" in props
-        ? props.validationFactory(currentValue as TFactoryValue, props.fn)
-        : props.fn(currentValue);
+      const result: ValidationResult =
+        "validationFactory" in props
+          ? props.validationFactory(currentValue as TFactoryValue, props.fn)
+          : props.fn(currentValue);
 
       if (result === true) {
         setError(undefined);
@@ -186,7 +187,7 @@ const ValidateWrapper = <TValue, TFactoryValue, TSchema>({
       setError(undefined);
       onError(id, undefined);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, onError, currentValue, canValidate]);
 
   return <>{children({ error: canValidate ? error : undefined, setValue })}</>;
@@ -277,16 +278,12 @@ export function useValidator<TValue, TSchema>(
 
   const flattenedErrors = useMemo(
     () =>
-      canValidate
-        ? (Object.values(errors).filter(Boolean) as string[])
-        : [],
+      canValidate ? (Object.values(errors).filter(Boolean) as string[]) : [],
     [errors, canValidate]
   );
 
   const validate = useCallback(() => {
-    Object.values(subscriberRefs.current).forEach((callback) =>
-      callback(true)
-    );
+    Object.values(subscriberRefs.current).forEach((callback) => callback(true));
     setCanValidate(true);
   }, []);
 

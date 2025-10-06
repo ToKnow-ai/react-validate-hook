@@ -390,7 +390,7 @@ const [isChecking, setIsChecking] = useState(false);
 
 | Feature | react-validate-hook | react-hook-form | Formik | Final Form |
 |---------|---------------------|-----------------|--------|------------|
-| **Bundle Size** | ~2KB | ~9KB | ~13KB | ~5KB |
+| **Bundle Size** | ~1.3KB | ~9KB | ~13KB | ~5KB |
 | **Form State** | ❌ You control | ✅ Built-in | ✅ Built-in | ✅ Built-in |
 | **Validation Only** | ✅ Core focus | ❌ Coupled | ❌ Coupled | ❌ Coupled |
 | **Schema Support** | ✅ Any via adapter | ✅ Zod/Yup | ✅ Yup | ⚠️ Custom |

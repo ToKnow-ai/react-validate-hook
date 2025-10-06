@@ -1,1 +1,1 @@
-export { useValidator } from './useValidator';
+export { useValidator } from "./useValidator";

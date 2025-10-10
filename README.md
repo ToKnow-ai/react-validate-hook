@@ -267,10 +267,15 @@ Create a validator with schema-based validation.
 
 #### Common Props (Both Modes)
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `setValue` | `(value: T) => void` | Callback to update parent state |
-| `children` | Render function | Receives `{ error, setValue }` |
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `setValue` | `(value: T) => void` | ✅ Yes | Callback to update parent state |
+| `value` | `T` | ❌ No | Optional initial/external value for validation |
+| `children` | Render function | ✅ Yes | Receives `{ error, setValue }` or `{ error, value, setValue }` |
+
+**Important:** The `children` callback signature changes based on whether `value` is provided:
+- **Without `value` prop**: `({ error, setValue }) => ReactNode`
+- **With `value` prop**: `({ error, value, setValue }) => ReactNode`
 
 #### Simple Mode Additional Props
 
@@ -354,35 +359,88 @@ function ConditionalForm() {
 }
 ```
 
-### Async Validation
+### Validating Pre-Existing Values
 
-Wrap async logic in your validation function:
+When you have existing values (e.g., editing existing data), use the optional `value` prop to ensure validation has access to the current value from the start:
 
 ```tsx
-const { ValidateWrapper } = useValidator();
-const [isChecking, setIsChecking] = useState(false);
+function EditProfile() {
+  const { ValidateWrapper, validate } = useValidator();
+  // Existing data from API/props
+  const [username, setUsername] = useState("john_doe");
+  const [email, setEmail] = useState("john@example.com");
 
-<ValidateWrapper
-  setValue={setUsername}
-  fn={async (value) => {
-    if (!value) return "Username required";
-    
-    setIsChecking(true);
-    const exists = await checkUsernameExists(value);
-    setIsChecking(false);
-    
-    return exists ? "Username already taken" : true;
-  }}
->
-  {({ error, setValue }) => (
-    <>
-      <input onChange={(e) => setValue(e.target.value)} />
-      {isChecking && <span>Checking...</span>}
-      {error && <span>{error}</span>}
-    </>
-  )}
+  const handleSave = () => {
+    validate();
+    // Validation works correctly even on initial load
+  };
+
+  return (
+    <form>
+      {/* WITHOUT value prop - validation only knows about setValue calls */}
+      <ValidateWrapper
+        fn={(value) => value && value.length >= 3 ? true : "Min 3 characters"}
+        setValue={setUsername}
+      >
+        {({ error, setValue }) => (
+          <div>
+            <input 
+              value={username}
+              onChange={(e) => setValue(e.target.value)} 
+            />
+            {error && <span>{error}</span>}
+          </div>
+        )}
+      </ValidateWrapper>
+
+      {/* WITH value prop - validation always has current value */}
+      <ValidateWrapper
+        fn={(value) => value?.includes("@") ? true : "Invalid email"}
+        value={email}  {/* ← Ensures validation knows initial value */}
+        setValue={setEmail}
+      >
+        {({ error, value, setValue }) => (
+          <div>
+            <input 
+              value={value}  {/* ← Can use value from callback */}
+              onChange={(e) => setValue(e.target.value)} 
+            />
+            {error && <span>{error}</span>}
+          </div>
+        )}
+      </ValidateWrapper>
+
+      <button type="button" onClick={handleSave}>Save Changes</button>
+    </form>
+  );
+}
+```
+
+**Type Safety:** TypeScript enforces that when you provide `value`, your children callback must accept it:
+
+```tsx
+// ✅ Correct - no value prop, callback doesn't use it
+<ValidateWrapper fn={validator} setValue={setField}>
+  {({ error, setValue }) => <input onChange={e => setValue(e.target.value)} />}
+</ValidateWrapper>
+
+// ✅ Correct - value prop provided, callback uses it
+<ValidateWrapper fn={validator} value={field} setValue={setField}>
+  {({ error, value, setValue }) => <input value={value} onChange={e => setValue(e.target.value)} />}
+</ValidateWrapper>
+
+// ❌ TypeScript Error - value prop provided but callback doesn't accept it
+<ValidateWrapper fn={validator} value={field} setValue={setField}>
+  {({ error, setValue }) => <input />}
+</ValidateWrapper>
+
+// ❌ TypeScript Error - no value prop but callback tries to use it
+<ValidateWrapper fn={validator} setValue={setField}>
+  {({ error, value, setValue }) => <input value={value} />}
 </ValidateWrapper>
 ```
+
+TODO: Async Validation
 
 ---
 
@@ -390,7 +448,7 @@ const [isChecking, setIsChecking] = useState(false);
 
 | Feature | react-validate-hook | react-hook-form | Formik | Final Form |
 |---------|---------------------|-----------------|--------|------------|
-| **Bundle Size** | ~1.3KB | ~9KB | ~13KB | ~5KB |
+| **Bundle Size** | ~1.2KB | ~9KB | ~13KB | ~5KB |
 | **Form State** | ❌ You control | ✅ Built-in | ✅ Built-in | ✅ Built-in |
 | **Validation Only** | ✅ Core focus | ❌ Coupled | ❌ Coupled | ❌ Coupled |
 | **Schema Support** | ✅ Any via adapter | ✅ Zod/Yup | ✅ Yup | ⚠️ Custom |

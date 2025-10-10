@@ -39,7 +39,7 @@ describe("useValidator", () => {
           fn: (val: string | undefined | null) =>
             val && val.length >= 3 ? true : "Must be at least 3 characters",
           setValue: () => {},
-          children: ({ error, setValue: _setValue }) => {
+          children: ({ error }) => {
             capturedError = error;
             return <div data-testid="error">{error}</div>;
           },
@@ -365,6 +365,227 @@ describe("useValidator", () => {
         capturedSetValue?.("valid");
       });
       expect(result.current.errors).toEqual([]);
+    });
+  });
+
+  describe("Value prop feature", () => {
+    it("should validate initial value when value prop is provided", () => {
+      const { result } = renderHook(() => useValidator());
+      let capturedValue: string | undefined;
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: (val: string | undefined | null) =>
+            val && val.length >= 3 ? true : "Min 3 characters",
+          value: "ab",
+          setValue: () => {},
+          children: ({ error, value, setValue }) => {
+            capturedValue = value;
+            return <div>{error}</div>;
+          },
+        });
+
+      render(<Component />);
+
+      // Value should be available in children
+      expect(capturedValue).toBe("ab");
+
+      // Validate should work with initial value
+      act(() => {
+        result.current.validate();
+      });
+
+      expect(result.current.errors).toContain("Min 3 characters");
+    });
+
+    it("should pass valid initial value through validation", () => {
+      const { result } = renderHook(() => useValidator());
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: (val: string | undefined | null) =>
+            val && val.length >= 3 ? true : "Min 3 characters",
+          value: "valid",
+          setValue: () => {},
+          children: ({ error, value, setValue }) => <div>{error}</div>,
+        });
+
+      render(<Component />);
+
+      act(() => {
+        result.current.validate();
+      });
+
+      expect(result.current.errors).toEqual([]);
+    });
+
+    it("should sync internal value with external value prop changes", () => {
+      const { result } = renderHook(() => useValidator());
+      let capturedValue: string | undefined;
+
+      const Component = ({ externalValue }: { externalValue: string }) =>
+        result.current.ValidateWrapper({
+          fn: (val: string | undefined | null) =>
+            val && val.length >= 3 ? true : "Min 3 characters",
+          value: externalValue,
+          setValue: () => {},
+          children: ({ error, value, setValue }) => {
+            capturedValue = value;
+            return <div>{error}</div>;
+          },
+        });
+
+      const { rerender } = render(<Component externalValue="ab" />);
+
+      expect(capturedValue).toBe("ab");
+
+      // Change external value
+      rerender(<Component externalValue="abc" />);
+
+      expect(capturedValue).toBe("abc");
+
+      // Validate with updated value
+      act(() => {
+        result.current.validate();
+      });
+
+      expect(result.current.errors).toEqual([]);
+    });
+
+    it("should allow setValue to update value when value prop is provided", () => {
+      const { result } = renderHook(() => useValidator());
+      let capturedSetValue: ((value: string) => void) | undefined;
+      let capturedValue: string | undefined;
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: (val: string | undefined | null) =>
+            val && val.length >= 3 ? true : "Min 3 characters",
+          value: "initial",
+          setValue: () => {},
+          children: ({ error, value, setValue }) => {
+            capturedSetValue = setValue;
+            capturedValue = value;
+            return <div>{error}</div>;
+          },
+        });
+
+      render(<Component />);
+
+      expect(capturedValue).toBe("initial");
+
+      // Update via setValue
+      act(() => {
+        capturedSetValue?.("updated");
+      });
+
+      expect(capturedValue).toBe("updated");
+
+      act(() => {
+        result.current.validate();
+      });
+
+      expect(result.current.errors).toEqual([]);
+    });
+
+    it("should work with factory validation and value prop", () => {
+      const validationFactory = (
+        data: unknown,
+        schema: z.ZodType
+      ): string | true => {
+        const result = schema.safeParse(data);
+        return result.success
+          ? true
+          : (result.error.issues?.[0]?.message ?? "Validation failed");
+      };
+
+      const { result } = renderHook(() => useValidator(validationFactory));
+      const schema = z.string().email("Invalid email");
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: schema,
+          value: "not-an-email",
+          setValue: () => {},
+          children: ({ error, value, setValue }) => <div>{error}</div>,
+        });
+
+      render(<Component />);
+
+      act(() => {
+        result.current.validate();
+      });
+
+      expect(result.current.errors).toContain("Invalid email");
+    });
+
+    it("should handle undefined as initial value prop", () => {
+      const { result } = renderHook(() => useValidator());
+      let capturedValue: string | undefined;
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: (val) => (val ? true : "Required"),
+          value: undefined,
+          setValue: () => {},
+          children: ({ error, value, setValue }) => {
+            capturedValue = value;
+            return <div>{error}</div>;
+          },
+        });
+
+      render(<Component />);
+
+      expect(capturedValue).toBeUndefined();
+
+      act(() => {
+        result.current.validate();
+      });
+
+      expect(result.current.errors).toContain("Required");
+    });
+
+    it("should provide value in children callback when value prop is present", () => {
+      const { result } = renderHook(() => useValidator());
+      let childrenCallbackKeys: string[] = [];
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: () => true,
+          value: "test",
+          setValue: () => {},
+          children: (props) => {
+            childrenCallbackKeys = Object.keys(props);
+            return <div>test</div>;
+          },
+        });
+
+      render(<Component />);
+
+      expect(childrenCallbackKeys).toContain("error");
+      expect(childrenCallbackKeys).toContain("value");
+      expect(childrenCallbackKeys).toContain("setValue");
+    });
+
+    it("should not provide value in children callback when value prop is absent", () => {
+      const { result } = renderHook(() => useValidator());
+      let childrenCallbackKeys: string[] = [];
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: () => true,
+          setValue: () => {},
+          children: (props) => {
+            childrenCallbackKeys = Object.keys(props);
+            return <div>test</div>;
+          },
+        });
+
+      render(<Component />);
+
+      expect(childrenCallbackKeys).toContain("error");
+      expect(childrenCallbackKeys).toContain("setValue");
+      expect(childrenCallbackKeys).not.toContain("value");
     });
   });
 

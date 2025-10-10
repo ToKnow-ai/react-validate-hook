@@ -379,7 +379,7 @@ describe("useValidator", () => {
             val && val.length >= 3 ? true : "Min 3 characters",
           value: "ab",
           setValue: () => {},
-          children: ({ error, value, setValue }) => {
+          children: ({ error, value }) => {
             capturedValue = value;
             return <div>{error}</div>;
           },
@@ -407,7 +407,7 @@ describe("useValidator", () => {
             val && val.length >= 3 ? true : "Min 3 characters",
           value: "valid",
           setValue: () => {},
-          children: ({ error, value, setValue }) => <div>{error}</div>,
+          children: ({ error, }) => <div>{error}</div>,
         });
 
       render(<Component />);
@@ -429,7 +429,7 @@ describe("useValidator", () => {
             val && val.length >= 3 ? true : "Min 3 characters",
           value: externalValue,
           setValue: () => {},
-          children: ({ error, value, setValue }) => {
+          children: ({ error, value }) => {
             capturedValue = value;
             return <div>{error}</div>;
           },
@@ -507,7 +507,7 @@ describe("useValidator", () => {
           fn: schema,
           value: "not-an-email",
           setValue: () => {},
-          children: ({ error, value, setValue }) => <div>{error}</div>,
+          children: ({ error, }) => <div>{error}</div>,
         });
 
       render(<Component />);
@@ -528,7 +528,7 @@ describe("useValidator", () => {
           fn: (val) => (val ? true : "Required"),
           value: undefined,
           setValue: () => {},
-          children: ({ error, value, setValue }) => {
+          children: ({ error, value, }) => {
             capturedValue = value;
             return <div>{error}</div>;
           },

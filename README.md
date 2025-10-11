@@ -440,7 +440,43 @@ function EditProfile() {
 </ValidateWrapper>
 ```
 
-TODO: Async Validation
+### Async Validation
+
+Both validation functions and factory adapters support async operations:
+
+```tsx
+// Async inline validation
+<ValidateWrapper
+  setValue={setUsername}
+  fn={async (value) => {
+    if (!value) return "Required";
+    
+    const available = await checkUsernameAvailability(value);
+    return available ? true : "Username taken";
+  }}
+>
+  {({ error, setValue }) => (
+    <input onChange={e => setValue(e.target.value)} />
+  )}
+</ValidateWrapper>
+
+// Async factory validation
+const asyncAdapter = async (data: any, schema: z.ZodType) => {
+  await simulateNetworkDelay(100);
+  const result = schema.safeParse(data);
+  return result.success ? true : result.error.errors[0].message;
+};
+
+const { ValidateWrapper, validate } = useValidator(asyncAdapter);
+
+// All validations complete before validate() resolves
+await validate();
+if (errors.length === 0) {
+  // Safe to submit
+}
+```
+
+The `validate()` function returns a Promise that resolves only after all async validations complete, making it safe to check errors immediately after.
 
 ---
 

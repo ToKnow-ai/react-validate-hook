@@ -1,6 +1,6 @@
 {
   "name": "react-validate-hook",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A lightweight, flexible, and type-safe React form validation hook with zero dependencies (except React)",
   "keywords": [
     "react",

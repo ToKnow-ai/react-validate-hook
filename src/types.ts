@@ -7,7 +7,7 @@ import { type ReactNode } from "react";
 /**
  * Type for validation result - either true (valid) or error message string
  */
-export type ValidationResult = string | true;
+export type ValidationResult = (string | true) | Promise<string | true>;
 
 /**
  * Simple validation function that validates a value directly
@@ -29,7 +29,7 @@ export type ValidationFactory<TValue, TSchema> = (
 /**
  * Callback for subscription to validation state changes
  */
-export type ValidationStateCallback = (canValidate: boolean) => void;
+export type ValidationStateCallback = (canValidate: boolean) => Promise<void>;
 
 /**
  * Callback for reporting validation errors
@@ -169,7 +169,7 @@ type FactoryValidateWrapperComponent<TSchema> = {
 export type SimpleValidatorReturn = {
   ValidateWrapper: SimpleValidateWrapperComponent;
   errors: string[];
-  validate: () => void;
+  validate: () => Promise<void>;
   reset: () => void;
 };
 
@@ -179,6 +179,6 @@ export type SimpleValidatorReturn = {
 export type FactoryValidatorReturn<TSchema> = {
   ValidateWrapper: FactoryValidateWrapperComponent<TSchema>;
   errors: string[];
-  validate: () => void;
+  validate: () => Promise<void>;
   reset: () => void;
 };

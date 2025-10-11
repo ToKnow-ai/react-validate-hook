@@ -101,14 +101,17 @@ export function useValidator<TValue, TSchema>(
     [errors, canValidate]
   );
 
-  const validate = useCallback(() => {
-    Object.values(subscriberRefs.current).forEach((callback) => callback(true));
+  const validate = useCallback(async () => {
+    const resultPromises = Object.values(subscriberRefs.current).map(
+      (callback) => callback(true)
+    );
     setCanValidate(true);
+    await Promise.all(resultPromises);
   }, []);
 
   const reset = useCallback(() => {
     Object.values(subscriberRefs.current).forEach((callback) =>
-      callback(false)
+      void callback(false)
     );
     setCanValidate(false);
     setErrors({});

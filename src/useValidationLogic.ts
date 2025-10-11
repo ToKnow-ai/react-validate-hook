@@ -28,13 +28,6 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
   const [canValidate, setCanValidate] = useState<boolean>(false);
   const id = useId();
 
-  // Sync internal value with external value prop
-  useEffect(() => {
-    if (externalValue !== undefined) {
-      setCurrentValue(externalValue);
-    }
-  }, [externalValue]);
-
   const setValue = useCallback(
     (newValue: TValue) => {
       setFieldValue(newValue);
@@ -43,20 +36,15 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
     [setFieldValue]
   );
 
-  useEffect(() => {
-    subscribe(id, setCanValidate);
-
-    return () => {
-      unsubscribe(id);
-    };
-  }, [id, subscribe, unsubscribe]);
-
-  useEffect(() => {
-    if (canValidate) {
+  const validate = async (_currentValue: typeof currentValue, _canValidate: boolean) => {
+    if (_canValidate) {
       const result: ValidationResult =
         "validationFactory" in props
-          ? props.validationFactory(currentValue as TFactoryValue, props.fn)
-          : props.fn(currentValue);
+          ? await props.validationFactory(
+              _currentValue as TFactoryValue,
+              props.fn
+            )
+          : await props.fn(_currentValue);
 
       if (result === true) {
         setError(undefined);
@@ -69,8 +57,43 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
       setError(undefined);
       onError(id, undefined);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, onError, currentValue, canValidate]);
+  };
+
+  // Sync internal value with external value prop
+  useEffect(() => {
+    if (externalValue !== undefined) {
+      setCurrentValue(externalValue);
+    }
+  }, [externalValue]);
+
+  useEffect(() => {
+    subscribe(id, (_canValidate: boolean) => {
+      setCanValidate(_canValidate);
+      return validate(currentValue, _canValidate);
+    });
+
+    return () => {
+      unsubscribe(id);
+    };
+  /**
+   * This should only fire when id, subscribe, unsubscribe changes.
+   * This functions is mostly intended to subscribe and unsubscribe.
+   * 
+   * Current value changing should not fire this, it has its own useEffect!
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, subscribe, unsubscribe, currentValue]);
+
+  useEffect(() => {
+    void validate(currentValue, canValidate);
+  /**
+   * This should only fire when current value changes, 
+   * not when canValidate changes.
+   * 
+   * the canValidate is evaluated automatically, when calling validate
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentValue]);
 
   return { error, currentValue, canValidate, setValue };
 };

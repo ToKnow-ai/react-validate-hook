@@ -1,4 +1,4 @@
-import { renderHook, render } from "@testing-library/react";
+import { renderHook, render, waitFor } from "@testing-library/react";
 import { act } from "react";
 import { useValidator } from "../useValidator";
 import * as z from "zod";
@@ -30,7 +30,7 @@ describe("useValidator", () => {
       expect(capturedError).toBeUndefined();
     });
 
-    it("should validate and show errors after validate() is called", () => {
+    it("should validate and show errors after validate() is called", async () => {
       const { result } = renderHook(() => useValidator());
       let capturedError: string | undefined;
 
@@ -47,15 +47,13 @@ describe("useValidator", () => {
 
       render(<Component />);
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(capturedError).toBe("Must be at least 3 characters");
       expect(result.current.errors).toContain("Must be at least 3 characters");
     });
 
-    it("should clear errors after reset() is called", () => {
+    it("should clear errors after reset() is called", async () => {
       const { result } = renderHook(() => useValidator());
 
       const Component = () =>
@@ -67,9 +65,7 @@ describe("useValidator", () => {
 
       render(<Component />);
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors.length).toBeGreaterThan(0);
 
@@ -80,7 +76,7 @@ describe("useValidator", () => {
       expect(result.current.errors).toEqual([]);
     });
 
-    it("should handle multiple ValidateWrappers", () => {
+    it("should handle multiple ValidateWrappers", async () => {
       const { result } = renderHook(() => useValidator());
 
       const Component1 = () =>
@@ -106,16 +102,14 @@ describe("useValidator", () => {
         </>
       );
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toHaveLength(2);
       expect(result.current.errors).toContain("Field 1 required");
       expect(result.current.errors).toContain("Field 2 required");
     });
 
-    it("should update validation when value changes", () => {
+    it("should update validation when value changes", async () => {
       const { result } = renderHook(() => useValidator());
       let capturedSetValue: ((value: string) => void) | undefined;
 
@@ -133,9 +127,7 @@ describe("useValidator", () => {
       render(<Component />);
 
       // Trigger validation
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toContain("Must be at least 3 characters");
 
@@ -144,10 +136,12 @@ describe("useValidator", () => {
         capturedSetValue?.("valid");
       });
 
-      expect(result.current.errors).toEqual([]);
+      await waitFor(() => {
+        expect(result.current.errors).toEqual([]);
+      });
     });
 
-    it("should handle null and undefined values", () => {
+    it("should handle null and undefined values", async () => {
       const { result } = renderHook(() => useValidator());
 
       const Component = () =>
@@ -159,14 +153,12 @@ describe("useValidator", () => {
 
       render(<Component />);
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toContain("Required");
     });
 
-    it("should only show errors after validation is enabled", () => {
+    it("should only show errors after validation is enabled", async () => {
       const { result } = renderHook(() => useValidator());
       let currentError: string | undefined;
 
@@ -186,9 +178,7 @@ describe("useValidator", () => {
       expect(currentError).toBeUndefined();
 
       // After validation
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(currentError).toBe("Always invalid");
     });
@@ -205,7 +195,7 @@ describe("useValidator", () => {
         : (result.error.issues?.[0]?.message ?? "Validation failed");
     };
 
-    it("should validate using zod schema", () => {
+    it("should validate using zod schema", async () => {
       const { result } = renderHook(() => useValidator(validationFactory));
 
       const schema = z.string().min(3, "Min 3 chars");
@@ -228,14 +218,12 @@ describe("useValidator", () => {
         capturedSetValue?.("");
       });
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toContain("Min 3 chars");
     });
 
-    it("should validate multiple fields with different schemas", () => {
+    it("should validate multiple fields with different schemas", async () => {
       const { result } = renderHook(() => useValidator(validationFactory));
 
       const nameSchema = z.string().min(2, "Name too short");
@@ -277,16 +265,14 @@ describe("useValidator", () => {
         capturedEmailSetValue?.("notanemail");
       });
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toHaveLength(2);
       expect(result.current.errors).toContain("Name too short");
       expect(result.current.errors).toContain("Invalid email");
     });
 
-    it("should pass valid values through factory validation", () => {
+    it("should pass valid values through factory validation", async () => {
       const { result } = renderHook(() => useValidator(validationFactory));
 
       const schema = z.string().min(3);
@@ -304,9 +290,7 @@ describe("useValidator", () => {
 
       render(<Component />);
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors.length).toBeGreaterThan(0);
 
@@ -314,10 +298,12 @@ describe("useValidator", () => {
         capturedSetValue?.("valid value");
       });
 
-      expect(result.current.errors).toEqual([]);
+      await waitFor(() => {
+        expect(result.current.errors).toEqual([]);
+      });
     });
 
-    it("should handle complex zod schemas", () => {
+    it("should handle complex zod schemas", async () => {
       const { result } = renderHook(() => useValidator(validationFactory));
 
       const schema = z
@@ -342,9 +328,7 @@ describe("useValidator", () => {
 
       render(<Component />);
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors.length).toBeGreaterThan(0);
 
@@ -364,12 +348,15 @@ describe("useValidator", () => {
       act(() => {
         capturedSetValue?.("valid");
       });
-      expect(result.current.errors).toEqual([]);
+
+      await waitFor(() => {
+        expect(result.current.errors).toEqual([]);
+      });
     });
   });
 
   describe("Value prop feature", () => {
-    it("should validate initial value when value prop is provided", () => {
+    it("should validate initial value when value prop is provided", async () => {
       const { result } = renderHook(() => useValidator());
       let capturedValue: string | undefined;
 
@@ -391,14 +378,12 @@ describe("useValidator", () => {
       expect(capturedValue).toBe("ab");
 
       // Validate should work with initial value
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toContain("Min 3 characters");
     });
 
-    it("should pass valid initial value through validation", () => {
+    it("should pass valid initial value through validation", async () => {
       const { result } = renderHook(() => useValidator());
 
       const Component = () =>
@@ -412,14 +397,12 @@ describe("useValidator", () => {
 
       render(<Component />);
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toEqual([]);
     });
 
-    it("should sync internal value with external value prop changes", () => {
+    it("should sync internal value with external value prop changes", async () => {
       const { result } = renderHook(() => useValidator());
       let capturedValue: string | undefined;
 
@@ -445,14 +428,12 @@ describe("useValidator", () => {
       expect(capturedValue).toBe("abc");
 
       // Validate with updated value
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toEqual([]);
     });
 
-    it("should allow setValue to update value when value prop is provided", () => {
+    it("should allow setValue to update value when value prop is provided", async () => {
       const { result } = renderHook(() => useValidator());
       let capturedSetValue: ((value: string) => void) | undefined;
       let capturedValue: string | undefined;
@@ -481,14 +462,12 @@ describe("useValidator", () => {
 
       expect(capturedValue).toBe("updated");
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toEqual([]);
     });
 
-    it("should work with factory validation and value prop", () => {
+    it("should work with factory validation and value prop", async () => {
       const validationFactory = (
         data: unknown,
         schema: z.ZodType
@@ -512,14 +491,12 @@ describe("useValidator", () => {
 
       render(<Component />);
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toContain("Invalid email");
     });
 
-    it("should handle undefined as initial value prop", () => {
+    it("should handle undefined as initial value prop", async () => {
       const { result } = renderHook(() => useValidator());
       let capturedValue: string | undefined;
 
@@ -538,9 +515,7 @@ describe("useValidator", () => {
 
       expect(capturedValue).toBeUndefined();
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toContain("Required");
     });
@@ -590,7 +565,7 @@ describe("useValidator", () => {
   });
 
   describe("Edge cases and bugs", () => {
-    it("should handle rapid validate/reset cycles", () => {
+    it("should handle rapid validate/reset cycles", async () => {
       const { result } = renderHook(() => useValidator());
 
       const Component = () =>
@@ -602,17 +577,17 @@ describe("useValidator", () => {
 
       render(<Component />);
 
-      act(() => {
-        result.current.validate();
+      await act(async () => {
+        await result.current.validate();
         result.current.reset();
-        result.current.validate();
+        await result.current.validate();
         result.current.reset();
       });
 
       expect(result.current.errors).toEqual([]);
     });
 
-    it("should handle unmounting ValidateWrapper", () => {
+    it("should handle unmounting ValidateWrapper", async () => {
       const { result } = renderHook(() => useValidator());
 
       const Component = ({ show }: { show: boolean }) =>
@@ -626,9 +601,7 @@ describe("useValidator", () => {
 
       const { rerender } = render(<Component show={true} />);
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toContain("Error");
 
@@ -645,7 +618,7 @@ describe("useValidator", () => {
       expect(result.current.errors).toEqual([]);
     });
 
-    it("should handle empty string vs null vs undefined", () => {
+    it("should handle empty string vs null vs undefined", async () => {
       const { result } = renderHook(() => useValidator());
       let capturedSetValue: ((value: string) => void) | undefined;
 
@@ -666,9 +639,7 @@ describe("useValidator", () => {
 
       render(<Component />);
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toContain("Value is undefined");
 
@@ -676,10 +647,12 @@ describe("useValidator", () => {
         capturedSetValue?.("");
       });
 
-      expect(result.current.errors).toContain("Value is empty string");
+      await waitFor(() => {
+        expect(result.current.errors).toContain("Value is empty string");
+      });
     });
 
-    it("should not add duplicate errors from same field", () => {
+    it("should not add duplicate errors from same field", async () => {
       const { result } = renderHook(() => useValidator());
       let capturedSetValue: ((value: string) => void) | undefined;
 
@@ -695,9 +668,7 @@ describe("useValidator", () => {
 
       render(<Component />);
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       expect(result.current.errors).toEqual(["Same error"]);
 
@@ -706,11 +677,13 @@ describe("useValidator", () => {
         capturedSetValue?.("new value");
       });
 
-      // Should still have only one error
-      expect(result.current.errors).toEqual(["Same error"]);
+      await waitFor(() => {
+        // Should still have only one error
+        expect(result.current.errors).toEqual(["Same error"]);
+      });
     });
 
-    it("should handle setValue being called before validate", () => {
+    it("should handle setValue being called before validate", async () => {
       const { result } = renderHook(() => useValidator());
       let capturedSetValue: ((value: string) => void) | undefined;
       let currentError: string | undefined;
@@ -739,16 +712,14 @@ describe("useValidator", () => {
       expect(result.current.errors).toEqual([]);
 
       // Now validate
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       // Should show error
       expect(currentError).toBe("Must be at least 3 characters");
       expect(result.current.errors).toContain("Must be at least 3 characters");
     });
 
-    it("should filter out undefined errors from the errors array", () => {
+    it("should filter out undefined errors from the errors array", async () => {
       const { result } = renderHook(() => useValidator());
 
       const Component1 = () =>
@@ -772,9 +743,7 @@ describe("useValidator", () => {
         </>
       );
 
-      act(() => {
-        result.current.validate();
-      });
+      await act(result.current.validate);
 
       // Should only contain the actual error, not undefined
       expect(result.current.errors).toEqual(["Error"]);

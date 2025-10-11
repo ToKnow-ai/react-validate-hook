@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type {
   ErrorReportCallback,
   SimpleValidationFn,
@@ -6,6 +6,17 @@ import type {
   ValidationResult,
   ValidationStateCallback,
 } from "./types";
+
+const useStateWithRef = <T>(initialValue: T) => {
+  const [state, _setState] = useState<T>(initialValue);
+  const stateRef = useRef<T>(initialValue);
+  const setState = useCallback((value: T) => {
+    stateRef.current = value;
+    _setState(value);
+  }, []);
+
+  return [state, setState, stateRef] as const;
+};
 
 // Core validation logic hook
 export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
@@ -22,29 +33,31 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
       }
 ) => {
   const [error, setError] = useState<string | undefined>(undefined);
-  const [currentValue, setCurrentValue] = useState<TValue | undefined>(
+  const [currentValue, setCurrentValue, currentValueRef] = useStateWithRef<TValue | undefined>(
     externalValue
   );
-  const [canValidate, setCanValidate] = useState<boolean>(false);
+  const [canValidate, setCanValidate, canValidateRef] = useStateWithRef<boolean>(false);
   const id = useId();
 
   const setValue = useCallback(
     (newValue: TValue) => {
       setFieldValue(newValue);
       setCurrentValue(newValue);
+      void validate();
     },
-    [setFieldValue]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [setCurrentValue, setFieldValue]
   );
 
-  const validate = async (_currentValue: typeof currentValue, _canValidate: boolean) => {
-    if (_canValidate) {
+  const validate = async () => {
+    if (canValidateRef.current) {
       const result: ValidationResult =
         "validationFactory" in props
           ? await props.validationFactory(
-              _currentValue as TFactoryValue,
+              currentValueRef.current as TFactoryValue,
               props.fn
             )
-          : await props.fn(_currentValue);
+          : await props.fn(currentValueRef.current);
 
       if (result === true) {
         setError(undefined);
@@ -62,14 +75,14 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
   // Sync internal value with external value prop
   useEffect(() => {
     if (externalValue !== undefined) {
-      setCurrentValue(externalValue);
+      setValue(externalValue);
     }
-  }, [externalValue]);
+  }, [externalValue, setValue]);
 
   useEffect(() => {
     subscribe(id, (_canValidate: boolean) => {
       setCanValidate(_canValidate);
-      return validate(currentValue, _canValidate);
+      return validate();
     });
 
     return () => {
@@ -82,18 +95,7 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
    * Current value changing should not fire this, it has its own useEffect!
    */
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, subscribe, unsubscribe, currentValue]);
-
-  useEffect(() => {
-    void validate(currentValue, canValidate);
-  /**
-   * This should only fire when current value changes, 
-   * not when canValidate changes.
-   * 
-   * the canValidate is evaluated automatically, when calling validate
-   */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentValue]);
+  }, [id, subscribe, unsubscribe]);
 
   return { error, currentValue, canValidate, setValue };
 };

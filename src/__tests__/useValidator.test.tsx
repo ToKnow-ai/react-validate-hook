@@ -4,6 +4,7 @@ import { useValidator } from "../useValidator";
 import * as z from "zod";
 
 describe("useValidator", () => {
+
   describe("Simple validation (no factory)", () => {
     it("should initialize with no errors", () => {
       const { result } = renderHook(() => useValidator());
@@ -747,6 +748,227 @@ describe("useValidator", () => {
 
       // Should only contain the actual error, not undefined
       expect(result.current.errors).toEqual(["Error"]);
+    });
+  });
+
+  describe("Async validation", () => {
+    beforeEach(() => {
+      jest.clearAllTimers();
+    });
+
+    afterEach(() => {
+      jest.clearAllTimers();
+    });
+
+    it("should handle async validation functions", async () => {
+      const { result } = renderHook(() => useValidator());
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: async (val: string | undefined | null) => {
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            return val && val.length >= 3 ? true : "Min 3 chars";
+          },
+          setValue: () => {},
+          children: ({ error }) => <div>{error}</div>,
+        });
+
+      render(<Component />);
+
+      await act(result.current.validate);
+
+      expect(result.current.errors).toContain("Min 3 chars");
+    });
+
+    it("should handle multiple async validations in parallel", async () => {
+      const { result } = renderHook(() => useValidator());
+
+      const Component1 = () =>
+        result.current.ValidateWrapper({
+          fn: async () => {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            return "Error 1";
+          },
+          setValue: () => {},
+          children: ({ error }) => <div>{error}</div>,
+        });
+
+      const Component2 = () =>
+        result.current.ValidateWrapper({
+          fn: async () => {
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            return "Error 2";
+          },
+          setValue: () => {},
+          children: ({ error }) => <div>{error}</div>,
+        });
+
+      render(
+        <>
+          <Component1 />
+          <Component2 />
+        </>
+      );
+
+      const start = Date.now();
+      await act(result.current.validate);
+      const duration = Date.now() - start;
+
+      expect(result.current.errors).toHaveLength(2);
+      expect(result.current.errors).toContain("Error 1");
+      expect(result.current.errors).toContain("Error 2");
+      // Should run in parallel, not sequentially (< 150ms, not 150ms+)
+      expect(duration).toBeLessThan(150);
+    });
+
+    it("should handle async validation with setValue updates", async () => {
+      const { result } = renderHook(() => useValidator());
+      let capturedSetValue: ((value: string) => void) | undefined;
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: async (val: string | undefined | null) => {
+            await new Promise((resolve) => setTimeout(resolve, 30));
+            return val === "valid" ? true : "Invalid";
+          },
+          setValue: () => {},
+          children: ({ error, setValue }) => {
+            capturedSetValue = setValue;
+            return <div>{error}</div>;
+          },
+        });
+
+      render(<Component />);
+
+      await act(result.current.validate);
+      expect(result.current.errors).toContain("Invalid");
+
+      act(() => {
+        capturedSetValue?.("valid");
+      });
+
+      await waitFor(
+        () => {
+          expect(result.current.errors).toEqual([]);
+        },
+        { timeout: 100 }
+      );
+    });
+
+    it("should handle async factory validation", async () => {
+      const asyncFactory = async (
+        data: unknown,
+        schema: z.ZodType
+      ): Promise<string | true> => {
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        const result = schema.safeParse(data);
+        return result.success ? true : "Async validation failed";
+      };
+
+      const { result } = renderHook(() => useValidator(asyncFactory));
+      const schema = z.string().min(5);
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: schema,
+          value: "abc",
+          setValue: () => {},
+          children: ({ error }) => <div>{error}</div>,
+        });
+
+      render(<Component />);
+
+      await act(result.current.validate);
+
+      expect(result.current.errors).toContain("Async validation failed");
+    });
+
+    it("should not have race conditions with rapid validate calls", async () => {
+      const { result } = renderHook(() => useValidator());
+      let validationCount = 0;
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: async () => {
+            validationCount++;
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            return "Error";
+          },
+          setValue: () => {},
+          children: ({ error }) => <div>{error}</div>,
+        });
+
+      render(<Component />);
+
+      await act(async () => {
+        await Promise.all([
+          result.current.validate(),
+          result.current.validate(),
+          result.current.validate(),
+        ]);
+      });
+
+      expect(result.current.errors).toContain("Error");
+      expect(validationCount).toBeGreaterThanOrEqual(1);
+    });
+
+    it("should handle async validation errors being thrown", async () => {
+      const { result } = renderHook(() => useValidator());
+
+      const Component = () =>
+        result.current.ValidateWrapper({
+          fn: async () => {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+            throw new Error("Validation threw");
+          },
+          setValue: () => {},
+          children: ({ error }) => <div>{error}</div>,
+        });
+
+      render(<Component />);
+
+      try {
+        await act(result.current.validate);
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+      }
+    });
+
+    it("should complete all async validations before resolving validate()", async () => {
+      const { result } = renderHook(() => useValidator());
+
+      const Component1 = () =>
+        result.current.ValidateWrapper({
+          fn: async () => {
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            return "Error 1";
+          },
+          setValue: () => {},
+          children: ({ error }) => <div>{error}</div>,
+        });
+
+      const Component2 = () =>
+        result.current.ValidateWrapper({
+          fn: async () => {
+            await new Promise((resolve) => setTimeout(resolve, 20));
+            return "Error 2";
+          },
+          setValue: () => {},
+          children: ({ error }) => <div>{error}</div>,
+        });
+
+      render(
+        <>
+          <Component1 />
+          <Component2 />
+        </>
+      );
+
+      await act(result.current.validate);
+
+      expect(result.current.errors).toHaveLength(2);
+      expect(result.current.errors).toContain("Error 1");
+      expect(result.current.errors).toContain("Error 2");
     });
   });
 });

@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
-import type { FactoryValidateWrapperProps, FactoryValidationInternalProps, SimpleValidateWrapperProps, SimpleValidationInternalProps } from "./types";
+import type {
+  FactoryValidateWrapperProps,
+  FactoryValidationInternalProps,
+  SimpleValidateWrapperProps,
+  SimpleValidationInternalProps,
+} from "./types";
 import { useValidationLogic } from "./useValidationLogic";
 
 // ============================================================================
@@ -7,25 +12,29 @@ import { useValidationLogic } from "./useValidationLogic";
 // ============================================================================
 
 export const ValidateWrapper = <TValue, TFactoryValue, TSchema>(
-  allProps: (SimpleValidateWrapperProps<TValue> & SimpleValidationInternalProps<TValue>) |
-    (FactoryValidateWrapperProps<TValue, TSchema> &
-      FactoryValidationInternalProps<TFactoryValue, TSchema>)
+  allProps:
+    | (SimpleValidateWrapperProps<TValue> &
+        SimpleValidationInternalProps<TValue>)
+    | (FactoryValidateWrapperProps<TValue, TSchema> &
+        FactoryValidationInternalProps<TFactoryValue, TSchema>)
 ) => {
   const {
-    setValue: setFieldValue, children, onError, subscribe, unsubscribe, ...props
+    setValue: setFieldValue,
+    children,
+    onError,
+    subscribe,
+    unsubscribe,
+    ...props
   } = allProps;
 
   const externalValue = "value" in allProps ? allProps.value : undefined;
   const hasValueProp = "value" in allProps;
 
-  const { error, currentValue, canValidate, setValue } = useValidationLogic<TValue, TFactoryValue, TSchema>(
-    setFieldValue,
-    externalValue,
-    onError,
-    subscribe,
-    unsubscribe,
-    props
-  );
+  const { error, currentValue, canValidate, setValue } = useValidationLogic<
+    TValue,
+    TFactoryValue,
+    TSchema
+  >(setFieldValue, externalValue, onError, subscribe, unsubscribe, props);
 
   // Type-safe rendering based on whether value prop exists
   if (hasValueProp) {

@@ -59,10 +59,11 @@ export type SimpleValidationInternalProps<TValue> = BaseInternalProps & {
 /**
  * Internal props for factory-based validation
  */
-export type FactoryValidationInternalProps<TValue, TSchema> = BaseInternalProps & {
-  validationFactory: ValidationFactory<TValue, TSchema>;
-  fn: TSchema;
-};
+export type FactoryValidationInternalProps<TValue, TSchema> =
+  BaseInternalProps & {
+    validationFactory: ValidationFactory<TValue, TSchema>;
+    fn: TSchema;
+  };
 
 // ============================================================================
 // Public Props - Used by consumers
@@ -95,16 +96,18 @@ type ValidateWrapperPropsWithoutValue<TValue> = {
 /**
  * Props for ValidateWrapper using simple validation function (without value)
  */
-type SimpleValidateWrapperPropsWithoutValue<TValue> = ValidateWrapperPropsWithoutValue<TValue> & {
-  fn: SimpleValidationFn<TValue>;
-};
+type SimpleValidateWrapperPropsWithoutValue<TValue> =
+  ValidateWrapperPropsWithoutValue<TValue> & {
+    fn: SimpleValidationFn<TValue>;
+  };
 
 /**
  * Props for ValidateWrapper using simple validation function (with value)
  */
-type SimpleValidateWrapperPropsWithValue<TValue> = ValidateWrapperPropsWithValue<TValue> & {
-  fn: SimpleValidationFn<TValue>;
-};
+type SimpleValidateWrapperPropsWithValue<TValue> =
+  ValidateWrapperPropsWithValue<TValue> & {
+    fn: SimpleValidationFn<TValue>;
+  };
 
 /**
  * Union of simple validation props
@@ -152,8 +155,12 @@ type SimpleValidateWrapperComponent = {
  * ValidateWrapper overload signatures for factory validation
  */
 type FactoryValidateWrapperComponent<TSchema> = {
-  <TFieldValue>(props: FactoryValidateWrapperPropsWithValue<TFieldValue, TSchema>): JSX.Element;
-  <TFieldValue>(props: FactoryValidateWrapperPropsWithoutValue<TFieldValue, TSchema>): JSX.Element;
+  <TFieldValue>(
+    props: FactoryValidateWrapperPropsWithValue<TFieldValue, TSchema>
+  ): JSX.Element;
+  <TFieldValue>(
+    props: FactoryValidateWrapperPropsWithoutValue<TFieldValue, TSchema>
+  ): JSX.Element;
 };
 
 /**

@@ -1,11 +1,11 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useState,
-} from "react";
-import type { ErrorReportCallback, SimpleValidationFn, ValidationFactory, ValidationResult, ValidationStateCallback } from "./types";
-
+import { useCallback, useEffect, useId, useState } from "react";
+import type {
+  ErrorReportCallback,
+  SimpleValidationFn,
+  ValidationFactory,
+  ValidationResult,
+  ValidationStateCallback,
+} from "./types";
 
 // Core validation logic hook
 export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
@@ -16,7 +16,10 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
   unsubscribe: (key: string) => void,
   props:
     | { fn: SimpleValidationFn<TValue> }
-    | { validationFactory: ValidationFactory<TFactoryValue, TSchema>; fn: TSchema }
+    | {
+        validationFactory: ValidationFactory<TFactoryValue, TSchema>;
+        fn: TSchema;
+      }
 ) => {
   const [error, setError] = useState<string | undefined>(undefined);
   const [currentValue, setCurrentValue] = useState<TValue | undefined>(

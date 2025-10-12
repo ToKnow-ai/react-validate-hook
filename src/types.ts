@@ -29,7 +29,7 @@ export type ValidationFactory<TValue, TSchema> = (
 /**
  * Callback for subscription to validation state changes
  */
-export type ValidationStateCallback = (canValidate: boolean) => Promise<void>;
+export type ValidationStateCallback = (canValidate: boolean) => Promise<string | true | undefined>;
 
 /**
  * Callback for reporting validation errors
@@ -169,7 +169,7 @@ type FactoryValidateWrapperComponent<TSchema> = {
 export type SimpleValidatorReturn = {
   ValidateWrapper: SimpleValidateWrapperComponent;
   errors: string[];
-  validate: () => Promise<void>;
+  validate: () => Promise<string[]>;
   reset: () => void;
 };
 
@@ -179,6 +179,6 @@ export type SimpleValidatorReturn = {
 export type FactoryValidatorReturn<TSchema> = {
   ValidateWrapper: FactoryValidateWrapperComponent<TSchema>;
   errors: string[];
-  validate: () => Promise<void>;
+  validate: () => Promise<string[]>;
   reset: () => void;
 };

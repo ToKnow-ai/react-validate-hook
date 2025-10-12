@@ -106,7 +106,8 @@ export function useValidator<TValue, TSchema>(
       (callback) => callback(true)
     );
     setCanValidate(true);
-    await Promise.all(resultPromises);
+    const errors = (await Promise.all(resultPromises)).filter(i => typeof i === 'string').filter(Boolean);
+    return errors;
   }, []);
 
   const reset = useCallback(() => {

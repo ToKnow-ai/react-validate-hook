@@ -39,16 +39,6 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
   const [canValidate, setCanValidate, canValidateRef] = useStateWithRef<boolean>(false);
   const id = useId();
 
-  const setValue = useCallback(
-    (newValue: TValue) => {
-      setFieldValue(newValue);
-      setCurrentValue(newValue);
-      void validate();
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [setCurrentValue, setFieldValue]
-  );
-
   const validate = async () => {
     if (canValidateRef.current) {
       const result: ValidationResult =
@@ -66,18 +56,30 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
         setError(result);
         onError(id, result);
       }
+      
+      return result
     } else {
       setError(undefined);
       onError(id, undefined);
     }
   };
 
+  const setValue = useCallback(
+    (newValue: TValue) => {
+      setFieldValue(newValue);
+      setCurrentValue(newValue);
+      void validate();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [setCurrentValue, setFieldValue]
+  );
+
   // Sync internal value with external value prop
   useEffect(() => {
-    if (externalValue !== undefined) {
+    if (externalValue !== undefined && externalValue !== currentValueRef.current) {
       setValue(externalValue);
     }
-  }, [externalValue, setValue]);
+  }, [currentValueRef, externalValue, setValue]);
 
   useEffect(() => {
     subscribe(id, (_canValidate: boolean) => {

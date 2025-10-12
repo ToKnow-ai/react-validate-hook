@@ -183,6 +183,47 @@ describe("useValidator", () => {
 
       expect(currentError).toBe("Always invalid");
     });
+
+    it("should return errors from validate() that match result.current.errors", async () => {
+      const { result } = renderHook(() => useValidator());
+
+      const Component1 = () =>
+        result.current.ValidateWrapper({
+          fn: () => "Error 1",
+          setValue: () => {},
+          children: ({ error }) => <div>{error}</div>,
+        });
+
+      const Component2 = () =>
+        result.current.ValidateWrapper({
+          fn: () => "Error 2",
+          setValue: () => {},
+          children: ({ error }) => <div>{error}</div>,
+        });
+
+      const Component3 = () =>
+        result.current.ValidateWrapper({
+          fn: () => true,
+          setValue: () => {},
+          children: ({ error }) => <div>{error}</div>,
+        });
+
+      render(
+        <>
+          <Component1 />
+          <Component2 />
+          <Component3 />
+        </>
+      );
+
+      const returnedErrors = await act(result.current.validate);
+
+      // The errors returned from validate() should match result.current.errors
+      expect(returnedErrors).toEqual(result.current.errors);
+      expect(returnedErrors).toHaveLength(2);
+      expect(returnedErrors).toContain("Error 1");
+      expect(returnedErrors).toContain("Error 2");
+    });
   });
 
   describe("Factory validation (with schema)", () => {

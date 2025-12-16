@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { renderHook, render, waitFor } from "@testing-library/react";
 import { act } from "react";
 import { useValidator } from "../useValidator";
@@ -394,6 +398,88 @@ describe("useValidator", () => {
       await waitFor(() => {
         expect(result.current.errors).toEqual([]);
       });
+    });
+
+    it("BUG: should use updated schema when external dependencies change (password confirmation example)", async () => {
+      const React = await import("react");
+      
+      const { result } = renderHook(() => {
+        const [password, setPassword] = React.useState("password123");
+        
+        const validationFactory = (
+          data: unknown,
+          schema: z.ZodType
+        ): string | true => {
+          const result = schema.safeParse(data);
+          return result.success
+            ? true
+            : (result.error.issues?.[0]?.message ?? "Validation failed");
+        };
+
+        const validator = useValidator(validationFactory);
+
+        // Create a schema that depends on password - this recreates when password changes
+        const confirmPasswordSchema = React.useMemo(() => {
+          return z
+            .string()
+            .min(1, "Confirm Password is required")
+            .refine(
+              (val) => {
+                return val === password;
+              },
+              {
+                message: "Passwords do not match",
+              }
+            );
+        }, [password]);
+
+        return { validator, confirmPasswordSchema, password, setPassword };
+      });
+
+      let capturedValue: string | undefined;
+
+      const Component = () => {
+        const { validator, confirmPasswordSchema } = result.current;
+        
+        return validator.ValidateWrapper({
+          fn: confirmPasswordSchema,
+          value: "password123",
+          setValue: () => {},
+          children: ({ error, value }) => {
+            capturedValue = value;
+            return <div>{error}</div>;
+          },
+        });
+      };
+
+      const { rerender } = render(<Component />);
+
+      // Initial state: password = "password123", confirmPassword = "password123"
+      expect(capturedValue).toBe("password123");
+
+      await act(result.current.validator.validate);
+      
+      // Should be valid - passwords match
+      expect(result.current.validator.errors).toEqual([]);
+
+      // Now change the password to "newpassword"
+      act(() => {
+        result.current.setPassword("newpassword");
+      });
+
+      // Rerender to get the new schema
+      rerender(<Component />);
+
+      // Confirm password is still "password123", but password is now "newpassword"
+      // So validation should fail with "Passwords do not match"
+      await act(result.current.validator.validate);
+
+      // BUG: This test will FAIL because the validate function in useValidationLogic
+      // still references the old schema where password = "password123"
+      // The validate function closes over props.fn and is never recreated when props.fn changes
+      // Expected: ["Passwords do not match"]
+      // Actual: [] (empty array, because it's using the old schema)
+      expect(result.current.validator.errors).toContain("Passwords do not match");
     });
   });
 

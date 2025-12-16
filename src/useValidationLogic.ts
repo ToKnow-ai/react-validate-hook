@@ -39,15 +39,25 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
   const [canValidate, setCanValidate, canValidateRef] = useStateWithRef<boolean>(false);
   const id = useId();
 
+  // Store props in a ref so validate() always uses the latest validation logic
+  // without needing to recreate callbacks (avoids unnecessary rerenders)
+  const propsRef = useRef(props);
+  
+  // Update the ref whenever props changes (e.g., when schema dependencies change)
+  useEffect(() => {
+    propsRef.current = props;
+  }, [props]);
+
   const validate = async () => {
     if (canValidateRef.current) {
+      // Use propsRef.current to always access the latest validation logic
       const result: ValidationResult =
-        "validationFactory" in props
-          ? await props.validationFactory(
+        "validationFactory" in propsRef.current
+          ? await propsRef.current.validationFactory(
               currentValueRef.current as TFactoryValue,
-              props.fn
+              propsRef.current.fn
             )
-          : await props.fn(currentValueRef.current);
+          : await propsRef.current.fn(currentValueRef.current);
 
       if (result === true) {
         setError(undefined);

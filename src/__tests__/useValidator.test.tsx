@@ -400,7 +400,7 @@ describe("useValidator", () => {
       });
     });
 
-    it("BUG: should use updated schema when external dependencies change (password confirmation example)", async () => {
+    it("should use updated schema when external dependencies change (password confirmation example)", async () => {
       const React = await import("react");
       
       const { result } = renderHook(() => {
@@ -474,11 +474,8 @@ describe("useValidator", () => {
       // So validation should fail with "Passwords do not match"
       await act(result.current.validator.validate);
 
-      // BUG: This test will FAIL because the validate function in useValidationLogic
-      // still references the old schema where password = "password123"
-      // The validate function closes over props.fn and is never recreated when props.fn changes
-      // Expected: ["Passwords do not match"]
-      // Actual: [] (empty array, because it's using the old schema)
+      // The validate function now correctly uses propsRef.current to access the latest schema
+      // This ensures validation uses the updated schema even when external dependencies change
       expect(result.current.validator.errors).toContain("Passwords do not match");
     });
   });

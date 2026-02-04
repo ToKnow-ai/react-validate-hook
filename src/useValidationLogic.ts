@@ -22,6 +22,7 @@ const useStateWithRef = <T>(initialValue: T) => {
 export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
   setFieldValue: (value: TValue) => void,
   externalValue: TValue | undefined,
+  hasValueProp: boolean,
   onError: ErrorReportCallback,
   subscribe: (key: string, callback: ValidationStateCallback) => void,
   unsubscribe: (key: string) => void,
@@ -86,11 +87,16 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
   );
 
   // Sync internal value with external value prop
+  // Use setCurrentValue (not setValue) to avoid calling setFieldValue back to parent
+  // which would cause infinite loops
+  // Only sync when value prop is explicitly provided (hasValueProp)
   useEffect(() => {
-    if (externalValue !== undefined) {
-      setValue(externalValue);
+    if (hasValueProp) {
+      setCurrentValue(externalValue);
+      void validate();
     }
-  }, [externalValue, setValue]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasValueProp, externalValue, setCurrentValue]);
 
   useEffect(() => {
     subscribe(id, (_canValidate: boolean) => {

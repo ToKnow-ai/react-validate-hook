@@ -562,13 +562,16 @@ describe("useValidator", () => {
       const { result } = renderHook(() => useValidator());
       let capturedSetValue: ((value: string) => void) | undefined;
       let capturedValue: string | undefined;
+      let externalValue = "initial";
 
-      const Component = () =>
+      const Component = ({ value }: { value: string }) =>
         result.current.ValidateWrapper({
           fn: (val: string | undefined | null) =>
             val && val.length >= 3 ? true : "Min 3 characters",
-          value: "initial",
-          setValue: () => {},
+          value,
+          setValue: (newValue) => {
+            externalValue = newValue;
+          },
           children: ({ error, value, setValue }) => {
             capturedSetValue = setValue;
             capturedValue = value;
@@ -576,14 +579,20 @@ describe("useValidator", () => {
           },
         });
 
-      render(<Component />);
+      const { rerender } = render(<Component value={externalValue} />);
 
       expect(capturedValue).toBe("initial");
 
-      // Update via setValue
+      // Update via setValue - this calls the parent's setValue
       act(() => {
         capturedSetValue?.("updated");
       });
+
+      // Parent should have received the new value
+      expect(externalValue).toBe("updated");
+
+      // Re-render with updated external value (simulating parent state update)
+      rerender(<Component value={externalValue} />);
 
       expect(capturedValue).toBe("updated");
 

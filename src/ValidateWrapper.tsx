@@ -34,7 +34,7 @@ export const ValidateWrapper = <TValue, TFactoryValue, TSchema>(
     TValue,
     TFactoryValue,
     TSchema
-  >(setFieldValue, externalValue, onError, subscribe, unsubscribe, props);
+  >(setFieldValue, externalValue, hasValueProp, onError, subscribe, unsubscribe, props);
 
   // Type-safe rendering based on whether value prop exists
   if (hasValueProp) {

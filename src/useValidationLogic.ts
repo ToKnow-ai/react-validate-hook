@@ -18,6 +18,23 @@ const useStateWithRef = <T>(initialValue: T) => {
   return [state, setState, stateRef] as const;
 };
 
+// Simple shallow comparison for objects
+const isShallowEqual = <T>(a: T, b: T): boolean => {
+  if (a === b) return true;
+  if (a === null || b === null) return a === b;
+  if (typeof a !== 'object' || typeof b !== 'object') return a === b;
+  
+  const aObj = a as Record<string, unknown>;
+  const bObj = b as Record<string, unknown>;
+  
+  const aKeys = Object.keys(aObj);
+  const bKeys = Object.keys(bObj);
+  
+  if (aKeys.length !== bKeys.length) return false;
+  
+  return aKeys.every(key => aObj[key] === bObj[key]);
+};
+
 // Core validation logic hook
 export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
   setFieldValue: (value: TValue) => void,
@@ -86,7 +103,7 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
 
   // Sync internal value with external value prop
   useEffect(() => {
-    if (externalValue !== undefined && externalValue !== currentValueRef.current) {
+    if (externalValue !== undefined && !isShallowEqual(externalValue, currentValueRef.current)) {
       setValue(externalValue);
     }
   }, [currentValueRef, externalValue, setValue]);

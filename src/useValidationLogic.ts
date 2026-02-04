@@ -18,23 +18,6 @@ const useStateWithRef = <T>(initialValue: T) => {
   return [state, setState, stateRef] as const;
 };
 
-// Simple shallow comparison for objects
-const isShallowEqual = <T>(a: T, b: T): boolean => {
-  if (a === b) return true;
-  if (a === null || b === null) return a === b;
-  if (typeof a !== 'object' || typeof b !== 'object') return a === b;
-  
-  const aObj = a as Record<string, unknown>;
-  const bObj = b as Record<string, unknown>;
-  
-  const aKeys = Object.keys(aObj);
-  const bKeys = Object.keys(bObj);
-  
-  if (aKeys.length !== bKeys.length) return false;
-  
-  return aKeys.every(key => aObj[key] === bObj[key]);
-};
-
 // Core validation logic hook
 export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
   setFieldValue: (value: TValue) => void,
@@ -47,19 +30,20 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
     | {
         validationFactory: ValidationFactory<TFactoryValue, TSchema>;
         fn: TSchema;
-      }
+      },
 ) => {
   const [error, setError] = useState<string | undefined>(undefined);
-  const [currentValue, setCurrentValue, currentValueRef] = useStateWithRef<TValue | undefined>(
-    externalValue
-  );
-  const [canValidate, setCanValidate, canValidateRef] = useStateWithRef<boolean>(false);
+  const [currentValue, setCurrentValue, currentValueRef] = useStateWithRef<
+    TValue | undefined
+  >(externalValue);
+  const [canValidate, setCanValidate, canValidateRef] =
+    useStateWithRef<boolean>(false);
   const id = useId();
 
   // Store props in a ref so validate() always uses the latest validation logic
   // without needing to recreate callbacks (avoids unnecessary rerenders)
   const propsRef = useRef(props);
-  
+
   // Update the ref whenever props changes (e.g., when schema dependencies change)
   useEffect(() => {
     propsRef.current = props;
@@ -72,7 +56,7 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
         "validationFactory" in propsRef.current
           ? await propsRef.current.validationFactory(
               currentValueRef.current as TFactoryValue,
-              propsRef.current.fn
+              propsRef.current.fn,
             )
           : await propsRef.current.fn(currentValueRef.current);
 
@@ -83,8 +67,8 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
         setError(result);
         onError(id, result);
       }
-      
-      return result
+
+      return result;
     } else {
       setError(undefined);
       onError(id, undefined);
@@ -98,15 +82,15 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
       void validate();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [setCurrentValue, setFieldValue]
+    [setCurrentValue, setFieldValue],
   );
 
   // Sync internal value with external value prop
   useEffect(() => {
-    if (externalValue !== undefined && !isShallowEqual(externalValue, currentValueRef.current)) {
+    if (externalValue !== undefined) {
       setValue(externalValue);
     }
-  }, [currentValueRef, externalValue, setValue]);
+  }, [externalValue, setValue]);
 
   useEffect(() => {
     subscribe(id, (_canValidate: boolean) => {
@@ -117,13 +101,13 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
     return () => {
       unsubscribe(id);
     };
-  /**
-   * This should only fire when id, subscribe, unsubscribe changes.
-   * This functions is mostly intended to subscribe and unsubscribe.
-   * 
-   * Current value changing should not fire this, it has its own useEffect!
-   */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    /**
+     * This should only fire when id, subscribe, unsubscribe changes.
+     * This functions is mostly intended to subscribe and unsubscribe.
+     *
+     * Current value changing should not fire this, it has its own useEffect!
+     */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, subscribe, unsubscribe]);
 
   return { error, currentValue, canValidate, setValue };

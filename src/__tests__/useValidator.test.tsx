@@ -687,6 +687,158 @@ describe("useValidator", () => {
       expect(childrenCallbackKeys).toContain("setValue");
       expect(childrenCallbackKeys).not.toContain("value");
     });
+
+    it("should sync internal value when external object value adds new properties", () => {
+      const { result } = renderHook(() => useValidator());
+      let capturedValue: TestValue | undefined;
+
+      type TestValue = {
+        storageAdapterId: string;
+        noDirectories?: boolean;
+        isComplete?: boolean;
+      };
+
+      const Component = ({ externalValue }: { externalValue: TestValue }) =>
+        result.current.ValidateWrapper({
+          fn: (val: TestValue | null | undefined) =>
+            val?.storageAdapterId ? true : "Storage adapter required",
+          value: externalValue,
+          setValue: () => {},
+          children: ({ value }) => {
+            capturedValue = value;
+            return <div>{JSON.stringify(value)}</div>;
+          },
+        });
+
+      // Initial render with simple object
+      const { rerender } = render(
+        <Component externalValue={{ storageAdapterId: "gopro" }} />
+      );
+
+      expect(capturedValue).toEqual({ storageAdapterId: "gopro" });
+
+      // Update with new properties added
+      rerender(
+        <Component
+          externalValue={{
+            storageAdapterId: "gopro",
+            noDirectories: true,
+            isComplete: false,
+          }}
+        />
+      );
+
+      // Internal value should sync with the new object
+      expect(capturedValue).toEqual({
+        storageAdapterId: "gopro",
+        noDirectories: true,
+        isComplete: false,
+      });
+    });
+
+    it("should sync internal value when external object value removes properties", () => {
+      const { result } = renderHook(() => useValidator());
+      let capturedValue: TestValue | undefined;
+
+      type TestValue = {
+        storageAdapterId: string;
+        noDirectories?: boolean;
+      };
+
+      const Component = ({ externalValue }: { externalValue: TestValue }) =>
+        result.current.ValidateWrapper({
+          fn: () => true,
+          value: externalValue,
+          setValue: () => {},
+          children: ({ value }) => {
+            capturedValue = value;
+            return <div>{JSON.stringify(value)}</div>;
+          },
+        });
+
+      // Initial render with multiple properties
+      const { rerender } = render(
+        <Component
+          externalValue={{ storageAdapterId: "gopro", noDirectories: true }}
+        />
+      );
+
+      expect(capturedValue).toEqual({
+        storageAdapterId: "gopro",
+        noDirectories: true,
+      });
+
+      // Update with property removed
+      rerender(<Component externalValue={{ storageAdapterId: "gopro" }} />);
+
+      // Internal value should sync
+      expect(capturedValue).toEqual({ storageAdapterId: "gopro" });
+    });
+
+    it("should sync internal value when external object property values change", () => {
+      const { result } = renderHook(() => useValidator());
+      let capturedValue: TestValue | undefined;
+
+      type TestValue = {
+        id: string;
+        count: number;
+      };
+
+      const Component = ({ externalValue }: { externalValue: TestValue }) =>
+        result.current.ValidateWrapper({
+          fn: () => true,
+          value: externalValue,
+          setValue: () => {},
+          children: ({ value }) => {
+            capturedValue = value;
+            return <div>{JSON.stringify(value)}</div>;
+          },
+        });
+
+      const { rerender } = render(
+        <Component externalValue={{ id: "test", count: 1 }} />
+      );
+
+      expect(capturedValue).toEqual({ id: "test", count: 1 });
+
+      // Update with changed property value
+      rerender(<Component externalValue={{ id: "test", count: 2 }} />);
+
+      expect(capturedValue).toEqual({ id: "test", count: 2 });
+    });
+
+    it("should sync internal value when external array value changes", () => {
+      const { result } = renderHook(() => useValidator());
+      let capturedValue: string[] | undefined;
+
+      const Component = ({ externalValue }: { externalValue: string[] }) =>
+        result.current.ValidateWrapper({
+          fn: (val: string[] | null | undefined) =>
+            val && val.length > 0 ? true : "At least one item required",
+          value: externalValue,
+          setValue: () => {},
+          children: ({ value }) => {
+            capturedValue = value;
+            return <div>{JSON.stringify(value)}</div>;
+          },
+        });
+
+      const { rerender } = render(<Component externalValue={["a", "b"]} />);
+
+      expect(capturedValue).toEqual(["a", "b"]);
+
+      // Add item
+      rerender(<Component externalValue={["a", "b", "c"]} />);
+      expect(capturedValue).toEqual(["a", "b", "c"]);
+
+      // Remove item
+      rerender(<Component externalValue={["a"]} />);
+      expect(capturedValue).toEqual(["a"]);
+
+      // Change item value
+      rerender(<Component externalValue={["x"]} />);
+      expect(capturedValue).toEqual(["x"]);
+    });
   });
 
   describe("Edge cases and bugs", () => {

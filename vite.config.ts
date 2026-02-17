@@ -6,7 +6,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
-      name: "ReactValidateHook",
+      name: "ReactValidate",
       formats: ["es", "cjs"],
       fileName: (format: string) =>
         `index.${format === "es" ? "esm" : format}.js`,

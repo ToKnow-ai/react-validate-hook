@@ -1,6 +1,6 @@
 {
-  "name": "react-validate-hook",
-  "version": "1.0.9",
+  "name": "@mckabue/react-validate",
+  "version": "2.0.0",
   "description": "A lightweight, flexible, and type-safe React form validation hook with zero dependencies (except React)",
   "keywords": [
     "react",
@@ -16,12 +16,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ToKnow-ai/react-validate-hook.git"
+    "url": "git+https://github.com/mckabue/validate-hook.git"
   },
   "bugs": {
-    "url": "https://github.com/ToKnow-ai/react-validate-hook/issues"
+    "url": "https://github.com/mckabue/validate-hook/issues"
   },
-  "homepage": "https://github.com/ToKnow-ai/react-validate-hook#readme",
+  "homepage": "https://github.com/mckabue/validate-hook#readme",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",

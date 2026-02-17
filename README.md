@@ -1,10 +1,12 @@
-# react-validate-hook
+> **📦 Migration Notice:** This package was previously published as `react-validate-hook`. If you are upgrading, simply change your imports from `react-validate-hook` to `@mckabue/react-validate`. The API is identical.
+
+# @mckabue/react-validate
 
 > A lightweight, flexible, and type-safe React form validation hook with zero dependencies (except React).
 
-[![npm version](https://img.shields.io/npm/v/react-validate-hook.svg)](https://www.npmjs.com/package/react-validate-hook) 
-[![npm downloads](https://img.shields.io/npm/dm/react-validate-hook.svg)](https://www.npmjs.com/package/react-validate-hook) 
-[![license](https://img.shields.io/npm/l/react-validate-hook.svg)](https://www.npmjs.com/package/react-validate-hook)
+[![npm version](https://img.shields.io/npm/v/@mckabue/react-validate.svg)](https://www.npmjs.com/package/@mckabue/react-validate) 
+[![npm downloads](https://img.shields.io/npm/dm/@mckabue/react-validate.svg)](https://www.npmjs.com/package/@mckabue/react-validate) 
+[![license](https://img.shields.io/npm/l/@mckabue/react-validate.svg)](https://www.npmjs.com/package/@mckabue/react-validate)
 
 ## Why This Package?
 
@@ -15,7 +17,7 @@ In the landscape of React form validation libraries, most solutions force you in
 1. **Heavy frameworks** (react-hook-form, Formik) - Full form management with opinionated state control
 2. **Schema-only validators** (Yup, Zod standalone) - No React integration, manual glue code required
 
-`react-validate-hook` fills the gap between these extremes with a **validation-first approach**:
+`@mckabue/react-validate` fills the gap between these extremes with a **validation-first approach**:
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -31,7 +33,7 @@ In the landscape of React form validation libraries, most solutions force you in
                       vs.
 ┌─────────────────────────────────────────────────────┐
 │                                                     │
-│  react-validate-hook                               │
+│  @mckabue/react-validate                               │
 │  └─ Validation engine only                         │
 │     ├─ Render prop pattern                         │
 │     ├─ Type-safe generics                          │
@@ -62,11 +64,11 @@ Consider alternatives if you need:
 ## Installation
 
 ```bash
-npm install react-validate-hook
+npm install @mckabue/react-validate
 # or
-yarn add react-validate-hook
+yarn add @mckabue/react-validate
 # or
-pnpm add react-validate-hook
+pnpm add @mckabue/react-validate
 ```
 
 **Peer Dependencies:**
@@ -81,7 +83,7 @@ pnpm add react-validate-hook
 For straightforward validation logic without schemas:
 
 ```tsx
-import { useValidator } from 'react-validate-hook';
+import { useValidator } from '@mckabue/react-validate';
 
 function LoginForm() {
   const { ValidateWrapper, validate, errors, reset } = useValidator();
@@ -151,7 +153,7 @@ function LoginForm() {
 For complex validation rules using Zod, Yup, or custom schemas:
 
 ```tsx
-import { useValidator } from 'react-validate-hook';
+import { useValidator } from '@mckabue/react-validate';
 import { z } from 'zod';
 
 const emailSchema = z.string().email("Invalid email");
@@ -482,7 +484,7 @@ The `validate()` function returns a Promise that resolves only after all async v
 
 ## Comparison with Alternatives
 
-| Feature | react-validate-hook | react-hook-form | Formik | Final Form |
+| Feature | @mckabue/react-validate | react-hook-form | Formik | Final Form |
 |---------|---------------------|-----------------|--------|------------|
 | **Bundle Size** | ~1.2KB | ~9KB | ~13KB | ~5KB |
 | **Form State** | ❌ You control | ✅ Built-in | ✅ Built-in | ✅ Built-in |
@@ -494,7 +496,7 @@ The `validate()` function returns a Promise that resolves only after all async v
 
 ### When Each Shines
 
-**Use react-validate-hook when:**
+**Use @mckabue/react-validate when:**
 - Building a custom form library or design system
 - Need validation in non-form contexts (filters, search, config)
 - Want minimal bundle impact with maximum flexibility

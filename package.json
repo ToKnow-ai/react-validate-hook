@@ -39,6 +39,7 @@
   },
   "scripts": {
     "build": "vite build",
+    "dev": "tsc -p tsconfig.json --noEmit",
     "build:watch": "vite build --watch",
     "clean": "rm -rf dist",
     "test": "jest",
@@ -48,7 +49,7 @@
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "prepublishOnly": "pnpm clean && pnpm build && pnpm test",
-    "dev": "pnpm build:watch"
+    "preview": "pnpm build:watch"
   },
   "peerDependencies": {
     "react": "^18.0.0"

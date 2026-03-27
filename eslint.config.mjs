@@ -2,7 +2,6 @@ import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
-import react from "eslint-plugin-react";
 import tseslint from "typescript-eslint";
 
 /**
@@ -29,8 +28,6 @@ export default tseslint.config([
       js.configs.recommended,
       ...tseslint.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
-      react.configs.flat.recommended,
-      react.configs.flat["jsx-runtime"],
     ],
     plugins: {
       "react-hooks": reactHooks,
@@ -50,11 +47,6 @@ export default tseslint.config([
         },
       },
     },
-    settings: {
-      react: {
-        version: "detect",
-      },
-    },
     rules: {
       // TypeScript rules
       "@typescript-eslint/no-unused-vars": [
@@ -69,16 +61,6 @@ export default tseslint.config([
       "@typescript-eslint/no-unnecessary-type-assertion": "error",
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-
-      // React rules
-      "react/prop-types": "off", // TypeScript handles this
-      "react/react-in-jsx-scope": "off", // Not needed with new JSX transform
-      "react/jsx-uses-react": "off", // Not needed with new JSX transform
-      "react/jsx-no-target-blank": ["error", { allowReferrer: false }],
-      "react/jsx-curly-brace-presence": [
-        "off",
-        { props: "never", children: "never" },
-      ],
 
       // React Hooks rules
       ...reactHooks.configs.recommended.rules,

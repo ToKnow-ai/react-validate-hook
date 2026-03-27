@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+ 
+ 
+ 
+ 
 import { renderHook, render, waitFor } from "@testing-library/react";
 import { act } from "react";
 import { useValidator } from "../useValidator";

@@ -2,7 +2,7 @@
 // Core Types - All other types derive from these
 // ============================================================================
 
-import { type ReactNode } from "react";
+import { type JSX, type ReactNode } from "react";
 
 /**
  * Type for validation result - either true (valid) or error message string

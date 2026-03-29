@@ -103,15 +103,17 @@ export function useValidator<TValue, TSchema>(
 
   const validate = useCallback(async () => {
     const resultPromises = Object.values(subscriberRefs.current).map(
-      (callback) => callback(true)
+      (callback: ValidationStateCallback) => callback(true)
     );
     setCanValidate(true);
-    const errors = (await Promise.all(resultPromises)).filter(i => typeof i === 'string').filter(Boolean);
+    const errors = (await Promise.all(resultPromises))
+      .filter((item: string | true | undefined): item is string => typeof item === 'string')
+      .filter(Boolean);
     return errors;
   }, []);
 
   const reset = useCallback(() => {
-    Object.values(subscriberRefs.current).forEach((callback) =>
+    Object.values(subscriberRefs.current).forEach((callback: ValidationStateCallback) =>
       void callback(false)
     );
     setCanValidate(false);

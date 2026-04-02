@@ -50,6 +50,13 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
     propsRef.current = props;
   }, [props]);
 
+  // Store setFieldValue in a ref to keep setValue stable across renders
+  // (callers often pass inline closures that change every render)
+  const setFieldValueRef = useRef(setFieldValue);
+  useEffect(() => {
+    setFieldValueRef.current = setFieldValue;
+  }, [setFieldValue]);
+
   const validate = async () => {
     if (canValidateRef.current) {
       // Use propsRef.current to always access the latest validation logic
@@ -78,12 +85,12 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
 
   const setValue = useCallback(
     (newValue: TValue) => {
-      setFieldValue(newValue);
+      setFieldValueRef.current(newValue);
       setCurrentValue(newValue);
       void validate();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [setCurrentValue, setFieldValue],
+    [setCurrentValue],
   );
 
   // Sync internal value with external value prop

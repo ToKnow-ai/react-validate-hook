@@ -44,18 +44,12 @@ export const useValidationLogic = <TValue, TFactoryValue, TSchema>(
   // Store props in a ref so validate() always uses the latest validation logic
   // without needing to recreate callbacks (avoids unnecessary rerenders)
   const propsRef = useRef(props);
-
-  // Update the ref whenever props changes (e.g., when schema dependencies change)
-  useEffect(() => {
-    propsRef.current = props;
-  }, [props]);
+  propsRef.current = props;
 
   // Store setFieldValue in a ref to keep setValue stable across renders
   // (callers often pass inline closures that change every render)
   const setFieldValueRef = useRef(setFieldValue);
-  useEffect(() => {
-    setFieldValueRef.current = setFieldValue;
-  }, [setFieldValue]);
+  setFieldValueRef.current = setFieldValue;
 
   const validate = async () => {
     if (canValidateRef.current) {
